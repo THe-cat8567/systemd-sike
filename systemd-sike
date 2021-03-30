@@ -1,0 +1,71 @@
+#! /bin/sh 
+
+# ensure output goes to /dev/console
+exec 2>&1 
+exec 1>/dev/console 
+
+# cd to root 
+cd / 
+
+# check if root
+[ "$(id -u)" = "0" ] || { echo "$0 must be run as root" ; exit 1 ;}
+
+# resolve invocation from symlinks
+
+case "$(basename "$0")" in
+	shutdown|poweroff|halt)
+		(kill -s USR1 1 &) & exit 0
+	;;
+
+	reboot)
+		(kill -s INT 1 &) & exit 0
+	;;
+esac
+
+# real path 
+from_path="$(readlink -f "$0")"
+
+# ensure PID 1 
+[ "$$" = "1" ] || { echo "$from_path must be run as PID 1 (init)" ; exit 1 ;} 
+
+# handle re-exec 
+if ! [ "$REEXEC" = "true" ]; then 
+	exec /bin/env -i REEXEC=true "$from_path"
+fi
+
+if [ -z "$REEXEC_SIGNAL" ]; then
+	if [ -x /etc/bootup ]; then 
+		(/etc/bootup &) &
+	else
+		echo "/etc/bootup is not a executable file" 
+		echo "launching emergency shell /bin/sh"
+		/bin/sh
+	fi
+else 
+	echo "re-exec from signal not executing /etc/bootup" 
+	echo "killing old sleep process spawned by init"
+	kill "$(cat /var/cache/sleep_init)" && echo "re-exec succesful"
+fi
+
+# act on signals
+
+reexec_signal () {
+	exec /bin/env -i REEXEC=true REEXEC_SIGNAL=1 "$from_path"
+}
+
+shutdown_reboot () {
+	if [ -x /etc/shutdown ]; then
+	exec /etc/shutdown "$1"
+	else
+		echo "/etc/shutdown is not a executable file"
+	fi
+}
+
+trap 'shutdown_reboot reboot' INT
+trap 'shutdown_reboot shutdown' USR1
+trap 'reexec_signal' HUP
+
+while : ; do 
+	# sleep for the max time speicifed by POSIX 
+	(/bin/sh -c 'echo $PPID > /var/cache/sleep_init'; exec sleep 2147483647) & wait
+done

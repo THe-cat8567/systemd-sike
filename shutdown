@@ -1,0 +1,59 @@
+#! /bin/sh
+
+# ensure PID is 1 otherwise this script is not safe
+[ "$$" = "1" ] || exit 1 
+
+# ensure $1 is valid
+case "$1" in
+	reboot|shutdown)
+	;;
+	*) { echo "$1 is not a valid argument" ; exit 1 ;}
+	;;
+esac
+
+# set PATH
+PATH="/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin"
+
+# ensure /proc is mounted 
+mount -o remount,rw,nosuid,noexec,nodev -t proc proc /proc
+
+# kill all processes via sysrq
+echo e > /proc/sysrq-trigger
+sleep 1
+echo i > /proc/sysrq-trigger
+
+# save random seed
+(dd if=/dev/urandom of=/var/lib/random-seed count=1 bs="$(cat /proc/sys/kernel/random/poolsize)" 1>/dev/null 2>&1)
+
+# un mount
+swapoff -a
+umount -a -r -t nosysfs,noproc,nodevtmpfs,notmpfs || sh -l
+sleep 1
+mount -o remount,ro /
+
+# sync disks
+sync
+
+# see if reboot/shutdown is done with sysrq or the-real-halt
+if command -V the-real-halt 1>/dev/null 2>&1 ; then 
+	use_halt="1"
+else
+	use_halt="0"
+fi
+
+# reboot or shutdown 
+case "$1" in
+	reboot) if [ "$use_halt" = "1" ]; then 
+				the-real-halt r
+			else
+				echo b > /proc/sysrq-trigger
+			fi
+	;;
+	shutdown) if [ "$use_halt" = "1" ]; then 
+				  the-real-halt p
+			else
+				#echo o > /proc/sysrq-trigger
+				/bin/sh
+			fi
+	;;	
+esac

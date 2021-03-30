@@ -1,0 +1,42 @@
+#! /bin/sh
+
+# mount pesduo-filesystems
+mount -o nosuid,noexec,nodev -t proc proc /proc
+mount -o nosuid,noexec,nodev -t sysfs sys /sys
+mount -o mode=0755,nosuid,nodev -t tmpfs run /run
+mount -o mode=0755,nosuid -t devtmpfs dev /dev
+mkdir -p -m 0755 /dev/pts /dev/shm /dev/mqueue /dev/hugepages /run/lock
+mount -o mode=0620,gid=5,nosuid,noexec -t devpts devpts /dev/pts
+mount -o mode=1777,nosuid,nodev -t tmpfs shm /dev/shm
+mount -o mode=0755 -t tmpfs cgroup /sys/fs/cgroup
+mkdir -p /sys/fs/cgroup/unified
+mount -o nsdelegate -t cgroup2 cgroup2 /sys/fs/cgroup/unified
+mount -o defaults -t hugetlbfs hugetlbfs /dev/hugepages
+mount -o defaults -t mqueue none /dev/mqueue
+mount -o nosuid,nodev,noexec -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc
+mount -o defaults,ro -t efivarfs none /sys/firmware/efi/efivars/
+rm -rf /var/lock /run/lock && ln -s /run/lock /var/lock
+
+# mount root rw
+mount -o remount,rw /
+
+# drop to shell
+echo "pesduo filesystems and the root filesystem have been mounted"
+echo "exit when finished"
+/bin/sh
+echo "rebooting"
+
+# cleanup 
+
+echo e > /proc/sysrq-trigger
+sleep 1
+echo i > /proc/sysrq-trigger
+
+swapoff -a
+umount -a -r -t nosysfs,noproc,nodevtmpfs,notmpfs || sh -l
+sleep 1
+mount -o remount,ro /
+
+sync 
+
+echo b > /proc/sysrq-trigger
