@@ -1,0 +1,12 @@
+## systemd-sike
+
+lil init written in POSIX sh
+
+systemd-sike - init program
+bootup - bootup script (/etc/bootup, modify as needed)
+shutdown - shutdown script (/etc/shutdown, modify as needed)
+rescue - rescue script (set this as the init= to have a rescue enviroment)
+the-real-hal.c (compile and place in $PATH)
+
+shutdown does not work if there are libvirt services or Xorg is running
+no idea why
