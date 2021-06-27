@@ -1,3 +1,5 @@
+// taken from https://github.com/cemkeylan/shinit#note-on-halting-the-system
+
 #include <sys/reboot.h>
 
 int
