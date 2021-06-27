@@ -10,3 +10,6 @@ the-real-hal.c (compile and place in $PATH)
 
 shutdown does not work if there are libvirt services or Xorg is running
 no idea why
+
+check the repo `dameontools-encore-extras` for services and helpers to manage services and oneshots
+
