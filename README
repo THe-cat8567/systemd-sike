@@ -6,7 +6,7 @@ systemd-sike - init program
 bootup - bootup script (/etc/bootup, modify as needed)
 shutdown - shutdown script (/etc/shutdown, modify as needed)
 rescue - rescue script (set this as the init= to have a rescue enviroment)
-the-real-hal.c (compile and place in $PATH)
+the-real-halt.c (compile and place in $PATH)
 
 shutdown does not work if there are libvirt services or Xorg is running
 no idea why
@@ -18,3 +18,6 @@ so thats why its only a single number
 
 i do not actually use this as my primary init, the point of this project was mostly educational
 and for fun not as a actual practical init
+
+NOTE: the code for the-real-halt.c is from:
+https://github.com/cemkeylan/shinit#note-on-halting-the-system
