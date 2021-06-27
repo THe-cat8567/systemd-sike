@@ -13,3 +13,8 @@ no idea why
 
 check the repo `dameontools-encore-extras` for services and helpers to manage services and oneshots
 
+the version naming scheme is supposed to work with my package manager project "localpkg"
+so thats why its only a single number
+
+i do not actually use this as my primary init, the point of this project was mostly educational
+and for fun not as a actual practical init
